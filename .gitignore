@@ -1,0 +1,3 @@
+myenv
+.env
+/db-scripts/config.json
