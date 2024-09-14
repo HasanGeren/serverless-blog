@@ -1,0 +1,11 @@
+{
+  "httpMethod": "GET",
+  "path": "/v1/posts",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "queryStringParameters": {
+    "name": "world"
+  },
+  "pathParameters": null
+}
