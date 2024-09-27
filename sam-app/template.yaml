@@ -5,16 +5,30 @@ Description: >
 
   Sample SAM Template for sam-app
 
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues:
+      - test
+      - prod
+    Default: test
+    Description: Deployment environment for the SAM application
+
+Conditions:
+  IsProd: !Equals [ !Ref Environment, prod ]
+  IsNotProd: !Equals [ !Ref Environment, test ]
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 3
-    MemorySize: 128
+    Timeout: !If [IsProd, 3, 3]  # Increased timeout for production
+    MemorySize: !If [IsProd, 128, 128]  # More memory for production
 
 Resources:
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub "HelloWorldFunction-${Environment}"
       CodeUri: hello_world/
       Handler: app.lambda_handler
       Runtime: python3.9
@@ -29,10 +43,13 @@ Resources:
           Properties:
             Path: /hello
             Method: get
+      Tags:
+          Environment: !Ref Environment
 
   GetPostsFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub "GetPosts-${Environment}"
       CodeUri: get_posts/
       Handler: handler.lambda_handler
       Runtime: python3.9
@@ -44,6 +61,8 @@ Resources:
           Properties:
             Path: /v1/posts
             Method: get
+      Tags:
+          Environment: !Ref Environment
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
