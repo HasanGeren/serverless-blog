@@ -25,6 +25,13 @@ Globals:
     MemorySize: !If [IsProd, 128, 128]  # More memory for production
 
 Resources:
+  # Define the shared S3 bucket, used by both environments (test and prod)
+  SharedS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: shared-serverless-blog-bucket  # This bucket is shared between both environments
+    DeletionPolicy: Retain  # Prevent deletion of the bucket when the stack is deleted
+
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -34,7 +41,7 @@ Resources:
       Runtime: python3.9
       Environment:
         Variables:
-          BUCKET_NAME: serverless-blog-platform-bucket
+          BUCKET_NAME: shared-serverless-blog-bucket
       Architectures:
         - x86_64
       Events:
