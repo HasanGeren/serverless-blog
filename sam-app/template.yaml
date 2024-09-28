@@ -32,27 +32,6 @@ Resources:
       BucketName: shared-serverless-blog-bucket  # This bucket is shared between both environments
     DeletionPolicy: Retain  # Prevent deletion of the bucket when the stack is deleted
 
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      FunctionName: !Sub "HelloWorldFunction-${Environment}"
-      CodeUri: hello_world/
-      Handler: app.lambda_handler
-      Runtime: python3.9
-      Environment:
-        Variables:
-          BUCKET_NAME: shared-serverless-blog-bucket
-      Architectures:
-        - x86_64
-      Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /hello
-            Method: get
-      Tags:
-          Environment: !Ref Environment
-
   GetPostsFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -72,15 +51,16 @@ Resources:
           Environment: !Ref Environment
 
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+  SharedS3Bucket:
+    Description: "Shared S3 Bucket"
+    Value: !Ref SharedS3Bucket
+
+  GetPostsApi:
+    Description: "API Gateway endpoint URL for Prod stage for Get Posts function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/v1/posts/"
+  GetPostsFunction:
+    Description: "Get Posts Lambda Function ARN"
+    Value: !GetAtt GetPostsFunction.Arn
+  GetPostsFunctionIamRole:
+    Description: "Implicit IAM Role created for Get Posts function"
+    Value: !GetAtt GetPostsFunctionRole.Arn
