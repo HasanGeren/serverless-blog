@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+
+  Sample SAM Template for sam-app
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues:
+      - test
+      - prod
+    Default: test
+    Description: Deployment environment for the SAM application
+
+Conditions:
+  IsProd: !Equals [ !Ref Environment, prod ]
+  IsNotProd: !Equals [ !Ref Environment, test ]
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: !If [IsProd, 3, 3]  # Increased timeout for production
+    MemorySize: !If [IsProd, 128, 128]  # More memory for production
+
+Resources:
+  # Define the shared S3 bucket, used by both environments (test and prod)
+  SharedS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: shared-serverless-blog-bucket  # This bucket is shared between both environments
+    DeletionPolicy: Retain  # Prevent deletion of the bucket when the stack is deleted
+
+  GetPostsFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      FunctionName: !Sub "GetPosts-${Environment}"
+      CodeUri: get_posts/
+      Handler: handler.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Events:
+        GetPosts:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /v1/posts
+            Method: get
+      Tags:
+          Environment: !Ref Environment
+
+Outputs:
+  SharedS3Bucket:
+    Description: "Shared S3 Bucket"
+    Value: !Ref SharedS3Bucket
+
+  GetPostsApi:
+    Description: "API Gateway endpoint URL for Prod stage for Get Posts function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/v1/posts/"
+  GetPostsFunction:
+    Description: "Get Posts Lambda Function ARN"
+    Value: !GetAtt GetPostsFunction.Arn
+  GetPostsFunctionIamRole:
+    Description: "Implicit IAM Role created for Get Posts function"
+    Value: !GetAtt GetPostsFunctionRole.Arn
